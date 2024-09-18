@@ -1,5 +1,6 @@
 # SKYLER HAWKINS SOLUTIONS FOR QUESTION 1 PROBLEMS
 import copy
+from collections import deque
 
 # global variables
 puzzle_array = []
@@ -29,30 +30,29 @@ def set_puzzle(input_file):
 
     return _puzzle_array
 
-
+# gets every new possible board state from the current board state, and returns these states in list form
 
 def get_possible_moves(puzzle_state):
     potential_moves = []
     # find the blank piece
     blank_x, blank_y = None, None
-    # print("puzzle_state: ", puzzle_state)
+
     for i in range(0,3):
         for j in range(0, 3):
             if puzzle_state[i][j] == '_':
                 blank_x, blank_y = i, j
     
+
     # check if can move a piece UP into the blank
     # aka, if blank is not in top row (if i > 0)
-    
     if blank_x > 0: 
         # make new board state here
         new_puzzle = copy.deepcopy(puzzle_state)
 
         new_puzzle[blank_x][blank_y] = new_puzzle[blank_x-1][blank_y]
         new_puzzle[blank_x-1][blank_y] = '_'
-        # print('new puzzle: ', new_puzzle)
         potential_moves.append(new_puzzle)
-        # print("CHECKING OLD PUZZLE: ", puzzle_state)    
+
     # check if can move a piece RIGHT into the blank
     # aka, if blank is not in rightmost column (if j < 2)
     if blank_y < 2:
@@ -81,6 +81,12 @@ def get_possible_moves(puzzle_state):
         potential_moves.append(new_puzzle)
     return potential_moves
     
+
+
+
+
+# SEARCH ALGORITHMS BELOW
+
 # specific heuristic for which direction to check next is not specified so 
 # Arbitraily chose to explore with the following priority: left, down, right, up
 # Seen both recursive and iterative approaches to DFS, I do not like recursion so I will implement an iterative approach
@@ -121,7 +127,38 @@ def DFS(initial_puzzle):
     return False
 
 
-puzzle_array = set_puzzle(open("input.txt", "r"))
-print("puzzle_array: ", puzzle_array)
-result = DFS(puzzle_array)
+# very similar to DFS in implementation, just using queue instead of stack
+# BFS is a FIFO queue, meaning instead of popping from the end (like in DFS), we pop from the front 
+# Found deque as a library, need to check with professor to see if this is allowed. If not, can try and implement a queue from scratch
+def BFS(initial_puzzle):
+    visited = []
+    iterations = 0
+    # need queue
+    # FOUND DEQUE from pythons collections library, should be perfect for this
+    queue = deque([initial_puzzle])
+
+    while queue:
+        current_state = queue.popleft()
+        if current_state == goal_state:
+            return iterations # solution found, work out details later
+        iterations += 1
+        if current_state not in visited:
+            visited.append(current_state)
+            for new_board_state in get_possible_moves(current_state):
+                queue.append(new_board_state)
+    return False
+
+
+
+
+
+
+# dfs_puzzle_array = set_puzzle(open("input.txt", "r"))
+# print("puzzle_array: ", dfs_puzzle_array)
+# result = DFS(dfs_puzzle_array)
+# print("Number of iterations: ", result)
+
+bfs_puzzle_array = set_puzzle(open("input.txt", "r"))
+print("puzzle_array: ", bfs_puzzle_array)
+result = BFS(bfs_puzzle_array)
 print("Number of iterations: ", result)
