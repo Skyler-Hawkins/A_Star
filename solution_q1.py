@@ -45,6 +45,8 @@ def get_possible_moves(puzzle_state):
 
     # check if can move a piece UP into the blank
     # aka, if blank is not in top row (if i > 0)
+
+
     if blank_x > 0: 
         # make new board state here
         new_puzzle = copy.deepcopy(puzzle_state)
@@ -81,7 +83,10 @@ def get_possible_moves(puzzle_state):
         potential_moves.append([new_puzzle, new_puzzle[blank_x][blank_y] + "L"])
     # this is essentially biasing left, down, right, up for DFS since it is a stack, but U R D L for BFS since it is a FIFO queue
     return potential_moves
-    
+
+
+
+
 
 # heuristic function for A* search, calculates manhattan distance from current state to goal state
 def manhattan_distance(current_state):
@@ -103,6 +108,7 @@ def manhattan_distance(current_state):
                 total_distance += distance
     return total_distance
 
+
 def straight_line_distance(current_state):
     total_distance = 0
 
@@ -111,13 +117,16 @@ def straight_line_distance(current_state):
             current = current_state[i][j]
             if current_state != "_":
                 distance = 0
+                # calculates distance for each blocks corresponding position in the goal state
                 for k in range(0, 3):
                     for l in range(0, 3):
+                        
                         if current == goal_state[k][l]:
-                            distance += ((int(i)-k)**2 + (int(j)-l)**2)**0.5
+                            distance += ((i-k)**2 + (j-l)**2)**0.5
                             break
                 total_distance += distance
     return total_distance
+
 
 # SEARCH ALGORITHMS BELOW
 
@@ -137,12 +146,11 @@ def DFS(initial_puzzle):
     # initial_puzzle = [['1', '2', '3'], ['_', '4', '5'], ['6', '7', '8']] #example puzzle that this DFS can solve
     stack = []
     stack.append([initial_puzzle, []])
-    print(stack)
+
     while stack: 
         stackout = stack.pop()
         current_state = stackout[0]
         path = stackout[1]
-        # print(len(stack))
         if current_state == goal_state:
             # solution found
             return path, node_expansions
@@ -152,9 +160,11 @@ def DFS(initial_puzzle):
             visited.add(current_tuple)
             node_expansions += 1
             for new_board_state, new_move in get_possible_moves(current_state):
-                stack.append([new_board_state, path + [new_move]])
+                new_board_tuple = tuple(map(tuple, new_board_state))
+                if new_board_tuple not in visited:
+                    stack.append([new_board_state, path + [new_move]])
         if node_expansions > 20000:
-            return "Solution not found in reasonable amount of expansions"
+            return ("Solution not found in reasonable amount of expansions, stack size: ", len(stack))
 
     return False
 

@@ -107,16 +107,17 @@ def manhattan_distance_2(current_state):
         for j in range(0, 3):
             if current_state[i][j] == '_':
                 blank_x, blank_y = i, j
-    
+
+    sum = 0
+    for i in range(0, 3):
+        if current_state[0][i] != '_':
+            sum += int(current_state[0][i])
     # next, if blank space in top row here
     if blank_x == 0:
         # sum of top row
-        sum = 0
-        for i in range(0, 3):
-            if current_state[0][i] != '_':
-                sum += int(current_state[0][i])
+
         if sum < 11: 
-            # find index of number that would make it 11, then calc manhattan distance from there
+            # find index of number that would make it 11, then calc manhattan distance from there 
             target = 11 - sum
             for i in range(1, 3):
                 for j in range(0, 3): 
@@ -126,20 +127,34 @@ def manhattan_distance_2(current_state):
                         break
         elif sum > 11:
             # need to find the number that would make it 11
-            target = sum - 11
+            # but, we need to replace one of the numbers in the top row with this number... since 
+            # thus we need to find manhattan distance to the number we choose to replace. 
+            target = sum - 11 
+            # if blank space is left or right, replace middle #, otherwise replace right
+            if blank_y == 0 or blank_y == 2:
+                target -= int(current_state[0][1])
+            else:
+                target -= int(current_state[0][2])
+            
+            
             for i in range(1, 3):
                 for j in range(0, 3):
                     if current_state[i][j] == str(target):
-                        total_distance = abs(i-0) + abs(j-blank_y)
-                        break
+                        if blank_y == 0:
+                            total_distance = abs(i-0) + abs(j-(blank_y + 1))
+                        if blank_y == 1:
+                            total_distance = abs(i-0) + abs(j-0)
+                        if blank_y == 2:
+                            total_distance = abs(i-0) + abs(j-(blank_y - 1))
+                            break
     else:
-        # arbitarily choosing to replace the middle number with the hypothetical new one (probably not optimal but it is my temp solution)
-        sum = sum - current_state[0][1]
+        # arbitarily choosing to replace the middle number with the hypothetical new one (probably not optimal but it is my temp solution) 
+        sum = sum - int(current_state[0][1])
         if sum < 11:
             target =  11 - sum
             for i in range(0, 3):
                 for j in range(0, 3):
-                    if current_state[0][i] == str(target):
+                    if current_state[i][j] == str(target):
                         total_distance = abs(i-0) + abs(j-1)
                         break
         elif sum > 11:
@@ -152,47 +167,82 @@ def manhattan_distance_2(current_state):
     return total_distance
 
         
-
-        
-
-
-
-
-# heuristic function for A* search, calculates manhattan distance from current state to goal state
-def manhattan_distance(current_state):
+# new straight line distance heuristic
+def straight_line_distance_2(current_state):
     total_distance = 0
-
-    ######################################## THESE ARE STRINGS, ALSO DONT ACCOUNT FOR THE _ STATE
+    # need to find the blank space first
+    blank_x, blank_y = None, None
+    for i in range(0,3):
+        for j in range(0, 3):
+            if current_state[i][j] == '_':
+                blank_x, blank_y = i, j
+    
+    sum = 0
     for i in range(0, 3):
-        for j in range(0,3):
-            
-            # here we are looking for the manhattan distance of the current state to the goal state
-            current = current_state[i][j]
-            if current_state != "_":
-                distance = 0
-                for k in range(0, 3):
-                    for l in range(0, 3):
-                        if current == goal_state[k][l]:
-                            distance += abs(int(i)-k) + abs(int(j)-l)
+        if current_state[0][i] != '_':
+            sum += int(current_state[0][i])
+    # next, if blank space in top row here
+    if blank_x == 0:
+        # sum of top row
+
+        if sum < 11: 
+            # find index of number that would make it 11, then calc manhattan distance from there 
+            target = 11 - sum
+            for i in range(1, 3):
+                for j in range(0, 3): 
+                    if current_state[i][j] == str(target):
+                        # distance from target to blank space, dont care about the other 
+                        total_distance = ((i - 0) ** 2 + (j - blank_y) ** 2) ** 0.5
+                        break
+        elif sum > 11:
+            # need to find the number that would make it 11
+            # but, we need to replace one of the numbers in the top row with this number... since 
+            # thus we need to find manhattan distance to the number we choose to replace. 
+            target = sum - 11
+            # if blank space is left or right, replace middle #, otherwise replace right
+            if blank_y == 0 or blank_y == 2:
+                target -= int(current_state[0][1])
+            else:
+                target -= int(current_state[0][2])
+
+            for i in range(1, 3):
+                for j in range(0, 3):
+                    if current_state[i][j] == str(target):
+                        if blank_y == 0:
+                            total_distance = (abs(i - 0) ** 2 + abs(j - (blank_y + 1)) ** 2) ** 0.5
+                        if blank_y == 1:
+                            # total_distance = abs(i-0) + abs(j-0)
+                            total_distance = (abs(i - 0) ** 2 + abs(j - blank_y) ** 2) ** 0.5
+                        if blank_y == 2:
+                            total_distance = (abs(i - 0) ** 2 + abs(j - (blank_y - 1)) ** 2) ** 0.5
+                            # total_distance = abs(i-0) + abs(j-(blank_y - 1))
                             break
-                total_distance += distance
+    else:
+        # arbitarily choosing to replace the middle number with the hypothetical new one (probably not optimal but it is my temp solution) 
+        sum = sum - int(current_state[0][1])
+        if sum < 11:
+            target =  11 - sum
+            for i in range(0, 3):
+                for j in range(0, 3):
+                    if current_state[i][j] == str(target):
+                        total_distance = (abs(i - 0) ** 2 + abs(j - 1) ** 2) ** 0.5
+                        # total_distance = abs(i-0) + abs(j-1)
+                        break
+        elif sum > 11:
+            target = sum - 11
+            if blank_y == 0 or blank_y == 2:
+                target -= int(current_state[0][1])
+            else:
+                target -= int(current_state[0][2])
+                
+            for i in range(0, 3):
+                for j in range(0, 3):
+                    if current_state[0][i] == str(target):
+                        total_distance = (abs(i - 0) ** 2 + abs(j - 1) ** 2) ** 0.5
+                        # total_distance = abs(i-0) + abs(j-1)
+                        break
     return total_distance
 
-def straight_line_distance(current_state):
-    total_distance = 0
-
-    for i in range(0, 3):
-        for j in range(0,3):
-            current = current_state[i][j]
-            if current_state != "_":
-                distance = 0
-                for k in range(0, 3):
-                    for l in range(0, 3):
-                        if current == goal_state[k][l]:
-                            distance += ((int(i)-k)**2 + (int(j)-l)**2)**0.5
-                            break
-                total_distance += distance
-    return total_distance
 
 
 # checks if goal is met
@@ -215,10 +265,7 @@ def check_goal(puzzle_state):
 # Seen both recursive and iterative approaches to DFS, I do not like recursion so I will implement an iterative approach
 
 
-
-
 def DFS(initial_puzzle):
-
     visited = set() # 9/20: changed to set for increased efficiency of check
     print("beginning dfs")
     node_expansions = 0
@@ -241,7 +288,9 @@ def DFS(initial_puzzle):
             visited.add(current_tuple)
             node_expansions += 1
             for new_board_state, new_move in get_possible_moves(current_state):
-                stack.append([new_board_state, path + [new_move]])
+                new_board_tuple = tuple(map(tuple, new_board_state))
+                if new_board_tuple not in visited:
+                    stack.append([new_board_state, path + [new_move]])
         if node_expansions > 20000:
             return "Solution not found in reasonable amount of expansions"
 
@@ -336,23 +385,23 @@ def A_star(initial_puzzle, heuristic=manhattan_distance_2):
 dfs_puzzle_array = set_puzzle(open("input.txt", "r"))
 try:
     result = DFS(dfs_puzzle_array)
-    print("\nThe solution of Q1.1(DFS) is:\n", result)
+    print("\nThe solution of Q2.1(DFS) is:\n", result)
 except Exception as e:
     print("DFS failed with error: ", e)
 
 bfs_puzzle_array = set_puzzle(open("input.txt", "r"))
 result = BFS(bfs_puzzle_array)
-print("\nThe solution of Q1.2(BFS) is:\n", result)
+print("\nThe solution of Q2.2(BFS) is:\n", result)
 
 ucs_puzzle_array = set_puzzle(open("input.txt", "r"))
 result = UCS(ucs_puzzle_array)
-print("\nThe solution of Q1.3(UCS) is:\n", result)
+print("\nThe solution of Q2.3(UCS) is:\n", result)
 
 a_star_puzzle_array = set_puzzle(open("input.txt", "r"))
-result = A_star(a_star_puzzle_array, manhattan_distance)
-print("\nThe solution of Q1.4(A*) is:\n", result)
+result = A_star(a_star_puzzle_array, manhattan_distance_2)
+print("\nThe solution of Q2.4(A*) is:\n", result)
 
 
 a_star_puzzle_array = set_puzzle(open("input.txt", "r"))
-result = A_star(a_star_puzzle_array, straight_line_distance)
-print("\nThe solution of Q1.5(A*) is:\n", result)
+result = A_star(a_star_puzzle_array, straight_line_distance_2)
+print("\nThe solution of Q2.5(A*) is:\n", result)
