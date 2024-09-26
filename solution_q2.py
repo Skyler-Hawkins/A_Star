@@ -1,15 +1,26 @@
 # SKYLER HAWKINS SOLUTIONS FOR QUESTION 2 PROBLEMS
 import copy
+import time
 from collections import deque
 
 '''
-ONLY difference between q1 and q2 is the goal check. So I'll make a check goal function that can be used in all the search algorithms
+CMPSC 442 Project 1: Search 
+Written By Skyler Hawkins
+
+NOTES: 
+I opted to use two libraries in this project, copy and deque.
+Copy is used to deep copy the puzzle state so I can quickly get a copy of the puzzle for each move
+    - I ran into this issue in the past on other projects, since python is pass by reference, I figured this is a viable solution
+Deque is used to implement a queue for BFS, since it was an easy way to implement a queue in python
+    - Since we are not being tested on our data structure implementation skills, but rather our search algorithms, I hope this is acceptable
+
+*In github codespace, where I have been developing my project, my DFS crashes rather quickly, likely due to the memory limits
+set on the codespace student account. I added a time check as per the Professor's suggestion.*    
 '''
 
 
 # global variables
 puzzle_array = []
-goal_state = [['_', '1', '2'], ['3', '4', '5'], ['6', '7', '8']]
 
 # HELPER FUNCTIONS: 
 # There are several helper functions that can be used in several different search algorithms, they will be implemented here
@@ -94,9 +105,10 @@ given a state, there will be a current sum of the top row
 this can either be < 11, 11, or > 11
 if < 11, we need to find what number would make it 11 (if possible)
 we then calculate the manhattan distance of that number to the blank space in the top row (if possible)
-if == 11, goal state reached, shouldnt even be here
-if > 11, we need to find what number would make it 11 (if possible)
-this sounds more complicated
+if == 11, goal state reached, should never reach here
+if > 11, we need to find what number would make it 11 by replacing one of the numbers in the top row
+More complicated than previous heuristic function, but should be more efficient
+I likely took some liberties that reduce the efficiency of the heuristic (perhaps overly optimistic), but it works
 '''
 
 def manhattan_distance_2(current_state):
@@ -266,6 +278,8 @@ def check_goal(puzzle_state):
 
 
 def DFS(initial_puzzle):
+    start_time = time.time()
+
     visited = set() # 9/20: changed to set for increased efficiency of check
     print("beginning dfs")
     node_expansions = 0
@@ -281,7 +295,7 @@ def DFS(initial_puzzle):
         # print(len(stack))
         if check_goal(current_state):
             # solution found
-            return path, node_expansions
+            return path
         # using tuple so I can check if the state has been visited in O(1) time
         current_tuple = tuple(map(tuple, current_state))
         if current_tuple not in visited:
@@ -291,8 +305,9 @@ def DFS(initial_puzzle):
                 new_board_tuple = tuple(map(tuple, new_board_state))
                 if new_board_tuple not in visited:
                     stack.append([new_board_state, path + [new_move]])
-        if node_expansions > 20000:
-            return "Solution not found in reasonable amount of expansions"
+        if time.time() - start_time > 10:
+            return ("Solution not found in reasonable amount of time")
+
 
     return False
 
@@ -314,7 +329,7 @@ def BFS(initial_puzzle):
         current_state = queuout[0]
         path = queuout[1]
         if check_goal(current_state):
-            return path, node_expansions # solution found, work out details later
+            return path
 
         current_tuple = tuple(map(tuple, current_state))
         if current_tuple not in visited:
@@ -357,17 +372,15 @@ def A_star(initial_puzzle, heuristic=manhattan_distance_2):
         _, g_cost, current_state, path = open.pop(min_i)
 
         if check_goal(current_state):
-            return path, node_expansions
+            return path
         
         current_tuple = tuple(map(tuple, current_state))
         if current_tuple not in visited:
             visited.add(current_tuple)
             node_expansions += 1
-            # print("current_state: ", current_state)
             for new_board_state, new_move in get_possible_moves(current_state):
                 new_g_cost = g_cost + 1
                 h_cost = heuristic(new_board_state)
-                # print("manhattan distance cost of new board state: ", new_board_state , h_cost)
                 f_cost = new_g_cost + h_cost
 
                 # checking if new board state is already in the open_list
@@ -382,26 +395,37 @@ def A_star(initial_puzzle, heuristic=manhattan_distance_2):
 
     
     return False
-dfs_puzzle_array = set_puzzle(open("input.txt", "r"))
+
+# DRIVER CODE OF THE FILE
+
+
+
 try:
+    dfs_puzzle_array = set_puzzle(open("input.txt", "r"))
     result = DFS(dfs_puzzle_array)
-    print("\nThe solution of Q2.1(DFS) is:\n", result)
+    result_str = ','.join(result)
+    print("\nThe solution of Q2.1(DFS) is:\n", result_str)
 except Exception as e:
-    print("DFS failed with error: ", e)
+    print("Failed with error: ", e)
+
 
 bfs_puzzle_array = set_puzzle(open("input.txt", "r"))
 result = BFS(bfs_puzzle_array)
-print("\nThe solution of Q2.2(BFS) is:\n", result)
+result_str = ','.join(result)
+print("\nThe solution of Q2.2(BFS) is:\n", result_str)
 
 ucs_puzzle_array = set_puzzle(open("input.txt", "r"))
 result = UCS(ucs_puzzle_array)
-print("\nThe solution of Q2.3(UCS) is:\n", result)
+result_str = ','.join(result)
+print("\nThe solution of Q2.3(UCS) is:\n", result_str)
 
 a_star_puzzle_array = set_puzzle(open("input.txt", "r"))
 result = A_star(a_star_puzzle_array, manhattan_distance_2)
-print("\nThe solution of Q2.4(A*) is:\n", result)
+result_str = ','.join(result)
+print("\nThe solution of Q2.4(A*) is:\n", result_str)
 
 
 a_star_puzzle_array = set_puzzle(open("input.txt", "r"))
 result = A_star(a_star_puzzle_array, straight_line_distance_2)
-print("\nThe solution of Q2.5(A*) is:\n", result)
+result_str = ','.join(result)
+print("\nThe solution of Q2.5(A*) is:\n", result_str)
